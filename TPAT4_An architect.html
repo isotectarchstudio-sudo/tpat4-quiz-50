@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architecture Great Exam 2025 - Practice</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #a855f7;
+            --success: #10b981;
+            --danger: #ef4444;
+            --glass: rgba(255, 255, 255, 0.8);
+        }
+
+        body {
+            font-family: 'Sarabun', 'Inter', sans-serif;
+            background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
+            min-height: 100vh;
+            color: #1e293b;
+        }
+
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-gradient {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: all 0.3s ease;
+        }
+
+        .btn-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .option-card {
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .option-card:hover {
+            background: white;
+            border-color: var(--primary);
+        }
+
+        .correct { background: #d1fae5 !important; border-color: var(--success) !important; }
+        .wrong { background: #fee2e2 !important; border-color: var(--danger) !important; }
+        
+        #quiz-screen, #result-screen { display: none; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-5xl mx-auto">
+        
+        <div id="welcome-screen" class="glass-card p-8 text-center animate-fade-in">
+            <h1 class="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
+                Architecture Great Exam 2025
+            </h1>
+            <p class="text-slate-600 mb-8 text-lg">คลังข้อสอบสถาปนิกและรางวัล Pritzker (40 ข้อ)</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+                <div class="p-6 rounded-2xl bg-white/50 border border-white">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+                <div class="flex flex-col justify-center text-left space-y-4">
+                    <h3 class="font-semibold text-xl border-l-4 border-indigo-500 pl-4">โครงสร้างข้อสอบ</h3>
+                    <ul class="space-y-2 text-slate-700">
+                        <li>• 1. สถาปนิก กับ ผลงาน (10 ข้อ)</li>
+                        <li>• 2. รางวัล Pritzker (10 ข้อ)</li>
+                        <li>• 3. ปรัชญาของสถาปนิก (10 ข้อ)</li>
+                        <li>• 4. ประวัติศาสตร์ (10 ข้อ)</li>
+                    </ul>
+                    <button onclick="startQuiz()" class="btn-gradient text-white py-4 px-8 rounded-xl font-bold text-lg mt-4 w-full">
+                        เริ่มทำข้อสอบ
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="quiz-screen" class="glass-card p-6 md:p-10">
+            <div class="flex justify-between items-center mb-6">
+                <span id="current-category" class="px-4 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-semibold">Category</span>
+                <span id="question-number" class="font-bold text-slate-400 text-xl">01/40</span>
+            </div>
+            
+            <div class="w-full bg-slate-200 h-2 rounded-full mb-8 overflow-hidden">
+                <div id="progress-bar" class="h-full bg-indigo-500 transition-all duration-500" style="width: 0%"></div>
+            </div>
+
+            <div id="question-container">
+                <h2 id="question-text" class="text-2xl md:text-3xl font-bold mb-8 leading-tight"></h2>
+                <div id="options-grid" class="grid grid-cols-1 gap-4 mb-8">
+                    </div>
+            </div>
+
+            <div id="explanation-box" class="hidden p-6 bg-slate-50 rounded-2xl border-l-8 border-indigo-500 mb-8">
+                <h4 class="font-bold text-indigo-700 mb-2">เฉลยและเหตุผลประกอบ:</h4>
+                <p id="explanation-text" class="text-slate-700"></p>
+                <button onclick="nextQuestion()" class="mt-4 bg-slate-900 text-white py-2 px-6 rounded-lg font-semibold hover:bg-slate-800 transition">
+                    ข้อถัดไป
+                </button>
+            </div>
+        </div>
+
+        <div id="result-screen" class="glass-card p-8">
+            <h2 class="text-3xl font-bold text-center mb-8">สรุปผลการทดสอบ</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10 text-center">
+                <div class="p-6 rounded-2xl bg-indigo-50">
+                    <div class="text-4xl font-bold text-indigo-600" id="total-correct">0</div>
+                    <div class="text-slate-500">ตอบถูก (ข้อ)</div>
+                </div>
+                <div class="p-6 rounded-2xl bg-rose-50">
+                    <div class="text-4xl font-bold text-rose-600" id="total-wrong">0</div>
+                    <div class="text-slate-500">ตอบผิด (ข้อ)</div>
+                </div>
+                <div class="p-6 rounded-2xl bg-emerald-50">
+                    <div class="text-4xl font-bold text-emerald-600" id="total-percent">0%</div>
+                    <div class="text-slate-500">คะแนนรวม</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div class="p-6 bg-white rounded-2xl shadow-sm">
+                    <canvas id="resultCategoryChart"></canvas>
+                </div>
+                <div id="category-breakdown" class="space-y-4">
+                    </div>
+            </div>
+
+            <div class="text-center mt-12">
+                <button onclick="location.reload()" class="btn-gradient text-white py-3 px-10 rounded-xl font-bold text-lg">
+                    ทำแบบทดสอบอีกครั้ง
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const quizData = [
+            // หมวดที่ 1: สถาปนิก กับ ผลงาน
+            { cat: "สถาปนิก กับ ผลงาน", q: "สถาปนิกผู้ได้รับรางวัล Pritzker ปี 2004 และเป็นที่รู้จักจากผลงานที่มีรูปทรงโค้งมนและไหลลื่นต่อเนื่องราวกับคลื่น โดยไม่มีเส้นตรงหรือมุมฉากเลยในผลงาน Heydar Aliyev Center คือใคร?", options: ["ก. ฌาคส์ แฮร์ซอก", "ข. ซาฮา ฮาดิด", "ค. คาซูโยะ เซจิมะ", "ง. อาราตะ อิโซซากิ"], ans: 1, exp: "ซาฮา ฮาดิด ได้รับรางวัล Pritzker ปี 2004 ในฐานะผู้หญิงคนแรก. ผลงานเด่นของเธอคือ Heydar Aliyev Center ที่มีรูปทรงโค้งมนและลื่นไหลต่อเนื่องราวกับคลื่น และเป็นสถาปัตยกรรมที่ไม่มีเส้นตรงหรือมุมฉากเลย" },
+            { cat: "สถาปนิก กับ ผลงาน", q: "ผลงานชื่อ Cardboard Cathedral ซึ่งเป็นโบสถ์ชั่วคราวที่สร้างจากท่อกระดาษแข็งขนาดใหญ่เพื่อช่วยเหลือผู้ประสบภัยแผ่นดินไหว เป็นผลงานเด่นของสถาปนิกท่านใด?", options: ["ก. ฟราย ออตโต", "ข. โตโย อิโตะ", "ค. ชิเงรุ บัน", "ง. ทอม เมย์น"], ans: 2, exp: "ชิเงรุ บัน ได้รับรางวัล Pritzker ปี 2014 โดยมีจุดเด่นในการใช้นวัตกรรมสมัยใหม่ผสานกับการออกแบบเพื่อช่วยเหลือเพื่อนมนุษย์ โดยเขาใช้ Paper Tube หรือแผ่น Cardboard รีไซเคิล. ผลงาน Cardboard Cathedral ในนิวซีแลนด์เป็นโบสถ์ชั่วคราวที่สร้างจากท่อกระดาษแข็งขนาดใหญ่" },
+            { cat: "สถาปนิก กับ ผลงาน", q: "ผลงาน Seattle Central Library ซึ่งเป็นห้องสมุดที่มีรูปทรงแปลกตาและโดดเด่นด้วยการออกแบบพื้นที่ภายในที่เชื่อมต่อกันเป็นเกลียวต่อเนื่อง เป็นผลงานของสถาปนิกและนักทฤษฎีคนสำคัญของยุคสมัยท่านใด?", options: ["ก. เรม คูลฮาส", "ข. ริชาร์ด โรเจอร์ส", "ค. ฌอง นูเวล", "ง. ปีเตอร์ ซุมธอร์"], ans: 0, exp: "เรม คูลฮาส ได้รับรางวัล Pritzker ปี 2000 ในฐานะสถาปนิกผู้เป็นนักคิดและนักทฤษฎีคนสำคัญ. ผลงานเด่นของเขาคือ Seattle Central Library ที่โดดเด่นด้วยการออกแบบพื้นที่ภายในที่เชื่อมต่อกันเป็นเกลียวต่อเนื่อง" },
+            { cat: "สถาปนิก กับ ผลงาน", q: "สนามกีฬารังนก (Beijing National Stadium) ที่ใช้ในโอลิมปิก 2008 โดดเด่นด้วยโครงสร้างเหล็กที่สานกันไปมาอย่างซับซ้อน เป็นผลงานร่วมกันของสถาปนิกคู่หูชาวสวิสท่านใด?", options: ["ก. ฌาคส์ แฮร์ซอก และ ปิแอร์ เดอ เมอรอน", "ข. อาน ลากาตง และ ฌอง-ฟิลิปป์ วาสซาล", "ค. อีวอนน์ ฟาร์เรลล์ และ เชลลีย์ แม็คนามารา", "ง. คาซูโยะ เซจิมะ และ ริวเอะ นิชิซาวะ"], ans: 0, exp: "คู่หูชาวสวิสคู่นี้ได้รับรางวัล Pritzker ปี 2001. ผลงานเด่นของพวกเขาคือ Beijing National Stadium (Bird’s Nest) ซึ่งมีโครงสร้างเหล็กที่สานกันไปมาอย่างซับซ้อนและสวยงาม" },
+            { cat: "สถาปนิก กับ ผลงาน", q: "Villa Savoye ในฝรั่งเศส ที่เป็นตัวอย่างที่สมบูรณ์แบบของการออกแบบสมัยใหม่ตามแนวคิด “Five Points of Architecture” คือผลงานของใคร?", options: ["ก. แฟรงค์ ลอยด์ ไรต์", "ข. ออสการ์ นีไมเออร์", "ค. เลอ กอร์บูซีเย", "ง. หลุยส์ คาห์น"], ans: 2, exp: "เลอ กอร์บูซีเย คือผู้ที่คิดค้นแนวคิด 'Five Points of Architecture'. Villa Savoye เป็นผลงานส่วนใหญ่ที่คนจะนึกถึงและถูกออกแบบมาเพื่อแสดงให้เห็นถึงศักยภาพของทฤษฎี 5 ประการของเขา" },
+            { cat: "สถาปนิก กับ ผลงาน", q: "อาคาร 30 St Mary Axe ในลอนดอน ซึ่งรู้จักกันในชื่อไม่เป็นทางการว่า The Gherkin (แตงกวา) ถูกออกแบบโดยบริษัทของสถาปนิกชาวอังกฤษท่านใด?", options: ["ก. ริชาร์ด โรเจอร์ส", "ข. เดวิด ชิปเปอร์ฟิลด์", "ค. นอร์แมน ฟอสเตอร์", "ง. ทอม เมย์น"], ans: 2, exp: "อาคาร 30 St Mary Axe (หรือ The Gherkin) เป็นตึกระฟ้าในลอนดอน ออกแบบโดยบริษัทสถาปนิก ฟอสเตอร์แอนด์พาร์ตเนอร์ส (Foster + Partners) ที่ นอร์แมน ฟอสเตอร์ ก่อตั้งขึ้น" },
+            { cat: "สถาปนิก กับ ผลงาน", q: "พิพิธภัณฑ์ Ningbo History Museum ในจีน ที่มีผนังทำจากเศษอิฐ กระเบื้อง และหินที่เก็บรวบรวมมาจากหมู่บ้านที่ถูกรื้อถอนในพื้นที่ เป็นผลงานเด่นของใคร?", options: ["ก. หลิว เจียคุน", "ข. หวัง ชู", "ค. โตโย อิโตะ", "ง. อาราตะ อิโซซากิ"], ans: 1, exp: "หวัง ชู ได้รับรางวัล Pritzker ปี 2012 โดยงานของเขาเป็นการวิพากษ์วิจารณ์การพัฒนาเมืองที่ทำลายประวัติศาสตร์. ผลงานเด่นคือ Ningbo History Museum ที่มีผนังทำจากวัสดุรีไซเคิลและเศษซากจากการรื้อถอนอาคารเก่า" },
+            { cat: "สถาปนิก กับ ผลงาน", q: "ผลงาน Therme Vals ซึ่งเป็นโรงอาบน้ำร้อนที่สร้างจากหินควอตไซต์ท้องถิ่นกว่า 60,000 แผ่น ให้ความรู้สึกเหมือนอยู่ในถ้ำที่สงบและลึกลับ เป็นผลงานของสถาปนิกท่านใด?", options: ["ก. ฌอง นูเวล", "ข. ปีเตอร์ ซุมธอร์", "ค. เปาโล เมนเดส ดา โรชา", "ง. เอดูอาร์โด โซตู เด มูรา"], ans: 1, exp: "ปีเตอร์ ซุมธอร์ ได้รับรางวัล Pritzker ปี 2009. Therme Vals เป็นผลงานเด่นที่สร้างจากหินควอตไซต์ท้องถิ่นจำนวนมาก เพื่อสร้างบรรยากาศที่ส่งผลต่อความรู้สึกของผู้ใช้งาน" },
+            { cat: "สถาปนิก กับ ผลงาน", q: "สถาปัตยกรรมไอคอนระดับโลกที่มีหลังคารูปทรงเปลือกหอยอันสง่างามอย่าง Sydney Opera House เป็นผลงานที่สร้างชื่อเสียงให้กับสถาปนิกชาวเดนมาร์กท่านใด?", options: ["ก. เลอ กอร์บูซีเย", "ข. ยอร์น อุตซอน", "ค. ทาดาโอะ อันโดะ", "ง. บิยาร์ก อิงเกลส์"], ans: 1, exp: "ยอร์น อุตซอน ได้รับรางวัล Pritzker ปี 2003 โดยรางวัลนี้เปรียบเสมือนการมอบเกียรติยศสูงสุดให้กับผลงานชิ้นเอกอย่าง Sydney Opera House ที่มีหลังคารูปทรงเปลือกหอย" },
+            { cat: "สถาปนิก กับ ผลงาน", q: "Commerzbank ในเมืองแฟรงก์เฟิร์ต เยอรมนี ซึ่งได้รับการออกแบบให้มีสวนลอยฟ้าขนาดใหญ่แทรกระหว่างชั้น และได้ชื่อว่าเป็น Ecological Skyscraper แห่งแรกของโลก เป็นผลงานของบริษัทใด?", options: ["ก. Morphosis", "ข. Foster + Partners", "ค. OMA", "ง. Grafton Architects"], ans: 1, exp: "อาคาร Commerzbank เป็นผลงานของบริษัท Foster + Partners. อาคารนี้ได้ชื่อว่าเป็น Ecological Skyscraper แห่งแรกของโลก เนื่องจากมีการออกแบบให้มีสวนลอยฟ้าขนาดใหญ่แทรกระหว่างชั้นและใช้เทคโนโลยีที่เป็นมิตรต่อสิ่งแวดล้อมเพื่อลดการใช้พลังงาน" },
+            
+            // หมวดที่ 2: รางวัล Pritzker
+            { cat: "รางวัล Pritzker", q: "รางวัลพริตซ์เกอร์ (The Pritzker Architecture Prize) มอบให้เพื่อเชิดชูเกียรติสถาปนิกที่มีชีวิตอยู่ ผู้ซึ่งผลงานของพวกเขาได้แสดงให้เห็นถึงคุณูปการอันใหญ่หลวงต่ออะไร?", options: ["ก. การสร้างผลงานเชิงพาณิชย์ที่มีกำไรสูง", "ข. การออกแบบอาคารที่สวยงามหรือแปลกใหม่ที่สุด", "ค. มนุษยชาติ ผ่านศิลปะแห่งการก่อสร้าง", "ง. การอนุรักษ์สถาปัตยกรรมยุคเก่าโดยสมบูรณ์"], ans: 2, exp: "รางวัลพริตซ์เกอร์มอบให้เพื่อเชิดชูเกียรติสถาปนิกที่ยังมีชีวิตอยู่ ผู้ซึ่งผลงานของพวกเขาได้สร้างคุณูปการอันใหญ่หลวงต่อมนุษยชาติ ผ่านศิลปะแห่งการก่อสร้าง" },
+            // ... (ข้อมูลจะถูกเติมในส่วนถัดไปเพื่อให้ครบ 40 ข้อตามที่คุณส่งมา)
+        ];
+
+        // เติมข้อมูลที่เหลือจากที่คุณส่งมา
+        const remainingData = [
+            { cat: "รางวัล Pritzker", q: "ใครคือผู้หญิงคนแรกที่ได้รับรางวัล Pritzker Architecture Prize ในปี 2004?", options: ["ก. อีวอนน์ ฟาร์เรลล์", "ข. คาซูโยะ เซจิมะ", "ค. ซาฮา ฮาดิด", "ง. การ์เม ปิเจ็ม"], ans: 2, exp: "ซาฮา ฮาดิด ได้รับรางวัล Pritzker ในปี 2004 และกลายเป็นผู้หญิงคนแรกที่ได้รับรางวัลอันทรงเกียรตินี้" },
+            { cat: "รางวัล Pritzker", q: "สถาปนิกผู้ได้รับรางวัล Pritzker ในปี 2005 คือ ทอม เมย์น (Thom Mayne) ซึ่งคณะกรรมการยกย่องว่างานของเขาเป็นการผลักดันขีดจำกัดด้านใดไปสู่จุดสูงสุด?", options: ["ก. การจำกัดความสูงของอาคาร", "ข. เทคโนโลยีและการสร้างรูปทรง", "ค. การใช้วัสดุท้องถิ่นราคาถูก", "ง. การออกแบบบ้านเดี่ยวขนาดเล็ก"], ans: 1, exp: "คณะกรรมการพริตซ์เกอร์มองว่างานของ ทอม เมย์น คือการผลักดันขีดจำกัดทางเทคโนโลยีและการสร้างรูปทรงไปสู่จุดสูงสุด" },
+            { cat: "รางวัล Pritzker", q: "สถาปนิกที่ได้รับรางวัล Pritzker ในปี 2017 ซึ่งเป็นการมอบรางวัลให้กับสถาปนิก 3 คนพร้อมกันเป็นครั้งแรก ได้แก่ใคร?", options: ["ก. SANAA", "ข. Grafton Architects", "ค. RCR Arquitectes", "ง. Lacaton & Vassal"], ans: 2, exp: "รางวัล Pritzker ปี 2017 มอบให้กับ ราฟาเอล อรันดา, การ์เม ปิเจ็ม และ รามอน บิลัลตา (RCR Arquitectes) ซึ่งเป็นครั้งแรกและครั้งเดียวที่รางวัลมอบให้กับสถาปนิก 3 คนพร้อมกัน" },
+            { cat: "รางวัล Pritzker", q: "สถาปนิกคนแรกที่อาศัยและทำงานอยู่ในประเทศจีนที่ได้รับรางวัล Pritzker ในปี 2012 คือใคร?", options: ["ก. หวัง ชู", "ข. หลิว เจียคุน", "ค. อาราตะ อิโซซากิ", "ง. เรม คูลฮาส"], ans: 0, exp: "การมอบรางวัลให้กับ หวัง ชู ในปี 2012 ถือเป็นช่วงเวลาประวัติศาสตร์ เพราะเขาคือสถาปนิกคนแรกที่อาศัยและทำงานในประเทศจีนที่ได้รับรางวัลนี้" },
+            { cat: "รางวัล Pritzker", q: "รางวัล Pritzker ปี 2019 ถูกมอบให้กับ อาราตะ อิโซซากิ เพื่อเป็นเกียรติแก่สถาปนิกรุ่นใหญ่ของญี่ปุ่นผู้ทรงอิทธิพลและมีผลงานหลากหลายตลอดกี่ทศวรรษ?", options: ["ก. 4 ทศวรรษ", "ข. 5 ทศวรรษ", "ค. 6 ทศวรรษ", "ง. 7 ทศวรรษ"], ans: 2, exp: "อาราตะ อิโซซากิ ได้รับรางวัล Pritzker ปี 2019 โดยเป็นที่รู้จักจากผลงานที่หลากหลายตลอด 6 ทศวรรษ" },
+            { cat: "รางวัล Pritzker", q: "ใครคือสถาปนิกชาวแอฟริกันและคนผิวสีคนแรกที่ได้รับรางวัล Pritzker ในปี 2022 โดยเน้นการใช้วัสดุท้องถิ่นและให้ชุมชนมีส่วนร่วมในการก่อสร้าง?", options: ["ก. อเลฮานโดร อาราเวนา", "ข. บาลกฤษณะ โดชิ", "ค. ดิเอเบโด ฟรานซิส เคเร", "ง. เปาโล เมนเดส ดา โรชา"], ans: 2, exp: "ดิเอเบโด ฟรานซิส เคเร ได้รับรางวัล Pritzker ปี 2022 และเป็นสถาปนิกชาวแอฟริกันและคนผิวสีคนแรกที่ได้รับรางวัลนี้ โดยเขาทำงานในพื้นที่ที่ขาดแคลนอย่างหนักและให้ชุมชนมีส่วนร่วมในการก่อสร้าง" },
+            { cat: "รางวัล Pritzker", q: "สถาปนิกที่ได้รับรางวัล Pritzker ในปี 2011 ซึ่งสร้างสนามฟุตบอล Estádio Municipal de Braga ที่ถูกสลักเข้าไปในหน้าผาของเหมืองหินเก่า คือใคร?", options: ["ก. เกล็น เมอร์คัตต์", "ข. เอดูอาร์โด โซตู เด มูรา", "ค. เดวิด ชิปเปอร์ฟิลด์", "ง. ริเคน ยามาโมโตะ"], ans: 1, exp: "เอดูอาร์โด โซตู เด มูรา ได้รับรางวัล Pritzker ปี 2011. ผลงานเด่นของเขาคือ Estádio Municipal de Braga ซึ่งเป็นสนามฟุตบอลที่ถูกสลักเข้าไปในหน้าผาของเหมืองหินเก่า" },
+            { cat: "รางวัล Pritzker", q: "คณะกรรมการ Pritzker ยกย่อง บาลกฤษณะ โดชิ (Balkrishna Doshi) สถาปนิกชาวอินเดียที่ได้รับรางวัลในปี 2018 ว่าเป็นงานที่จริงจัง ไม่ฉาบฉวย หรือตามกระแส ตลอดระยะเวลาการทำงานกี่ปี?", options: ["ก. 40 ปี", "ข. 50 ปี", "ค. 60 ปี", "ง. 70 ปี"], ans: 2, exp: "บาลกฤษณะ โดชิ ได้รับรางวัล Pritzker ปี 2018 จากผลงานที่จริงจัง ไม่ฉาบฉวย ตลอดระยะเวลา 60 ปีที่ผ่านมา" },
+            { cat: "รางวัล Pritzker", q: "รางวัล Pritzker ในปี 2024 มอบให้กับ ริเคน ยามาโมโตะ ซึ่งเน้นการออกแบบที่ท้าทายแนวคิดเรื่องใดในยุคใหม่?", options: ["ก. ความประหยัดพลังงาน", "ข. ความเป็นส่วนตัว", "ค. การก่อสร้างแบบไฮเทค", "ง. การใช้วัสดุจากต่างประเทศ"], ans: 1, exp: "ริเคน ยามาโมโตะ ได้รับรางวัล Pritzker ปี 2024 โดยงานของเขาท้าทายแนวคิดเรื่องความเป็นส่วนตัวในยุคใหม่ที่ทำให้ผู้คนแปลกแยกออกจากกัน" },
+            
+            // หมวดที่ 3: ปรัชญาของสถาปนิก
+            { cat: "ปรัชญาของสถาปนิก", q: "แนวคิดหลักของ เลอ กอร์บูซีเย คือการมองว่าอาคารควรเป็นอะไร เพื่อให้ตอบสนองความต้องการของผู้ใช้มากที่สุด?", options: ["ก. เครื่องจักรเพื่อการอยู่อาศัย (Machines for Living)", "ข. งานศิลปะแห่งศตวรรษที่ 20", "ค. สัญลักษณ์ของความมั่งคั่ง", "ง. ผืนผ้าใบขนาดใหญ่"], ans: 0, exp: "เลอ กอร์บูซีเย มองว่าอาคารควรเป็น “เครื่องจักรเพื่อการอยู่อาศัย” เพื่อให้อาคารทำหน้าที่ตอบสนองความต้องการของผู้ใช้มากที่สุด" },
+            { cat: "ปรัชญาของสถาปนิก", q: "สถาปนิกท่านใดที่มีปรัชญาในการทำงานคือ “ทำมากขึ้นโดยใช้น้อยลง” (Do more with less) และเป็นผู้บุกเบิกโครงสร้างน้ำหนักเบา (Lightweight Structures)?", options: ["ก. ฟราย ออตโต", "ข. โตโย อิโตะ", "ค. ฌอง นูเวล", "ง. เรม คูลฮาส"], ans: 0, exp: "ฟราย ออตโต ได้รับรางวัล Pritzker ปี 2015. เขาคือผู้บุกเบิกโครงสร้างน้ำหนักเบา (Lightweight Structures) และมีปรัชญาในการทำงานคือ “ทำมากขึ้นโดยใช้น้อยลง”" },
+            { cat: "ปรัชญาของสถาปนิก", q: "ปรัชญาการออกแบบของ หลิว เจียคุน (Liu Jiakun) สถาปนิกผู้ได้รับรางวัล Pritzker ปี 2025 คืออะไร?", options: ["ก. Form Follows Function", "ข. Less is More", "ค. Strategy over Style", "ง. Ornament is Crime"], ans: 2, exp: "หลิว เจียคุน ได้รับรางวัล Pritzker ปี 2025 โดยปรัชญาของเขาคือ กลยุทธ์เหนือรูปแบบ (Strategy over Style)" },
+            { cat: "ปรัชญาของสถาปนิก", q: "Louis Kahn มีชื่อเสียงจากบทสนทนาอันโด่งดังกับวัสดุชนิดใด โดยกล่าวว่า ‘อิฐ เจ้าต้องการเป็นอะไร’?", options: ["ก. เหล็ก", "ข. หินอ่อน", "ค. คอนกรีต", "ง. อิฐ"], ans: 3, exp: "หลุยส์ คาห์น มีชื่อเสียงจากบทสนทนาอันโด่งดังกับ ‘ก้อนอิฐ’ โดยกล่าวว่า ‘อิฐ เจ้าต้องการเป็นอะไร’" },
+            { cat: "ปรัชญาของสถาปนิก", q: "หลักการสำคัญของสถาปัตยกรรมแบบ ไฮเทค (High-Tech) ที่ ริชาร์ด โรเจอร์ส เป็นผู้นำคนสำคัญคืออะไร?", options: ["ก. การซ่อนโครงสร้างและระบบทั้งหมดไว้ภายใน", "ข. การตีความอาคารว่าเป็นเหมือนเครื่องจักรและโชว์ระบบต่างๆ ไว้ด้านนอก", "ค. การออกแบบที่เน้นความกลมกลืนกับภูมิทัศน์ธรรมชาติ", "ง. การสร้างอาคารที่ใช้คอนกรีตเปลือยเป็นหลักเท่านั้น"], ans: 1, exp: "ริชาร์ด โรเจอร์ส คือผู้นำสถาปัตยกรรมแบบไฮเทค ซึ่งมีเอกลักษณ์คือการตีความอาคารว่าเป็นเหมือนเครื่องจักร โดยนำระบบต่างๆ ของอาคารออกมาโชว์ที่ด้านนอกอย่างโจ่งแจ้ง" },
+            { cat: "ปรัชญาของสถาปนิก", q: "ปรัชญาหลักของสถาปนิกคู่หู อาน ลากาตง และ ฌอง-ฟิลิปป์ วาสซาล คือการยึดมั่นในแนวคิดใด?", options: ["ก. ทุบทิ้งแล้วสร้างใหม่เสมอ", "ข. ไม่ทุบทิ้ง สร้างใหม่เสมอ (Never demolish, always transform)", "ค. ใช้วัสดุใหม่ที่ไม่เคยใช้มาก่อน", "ง. สร้างอาคารขนาดใหญ่เพื่อเป็นแลนด์มาร์ก"], ans: 1, exp: "ลากาตง และ วาสซาล ยึดมั่นในปรัชญา ไม่ทุบทิ้ง สร้างใหม่เสมอ (Never demolish, always transform)" },
+            { cat: "ปรัชญาของสถาปนิก", q: "แฟรงค์ ลอยด์ ไรต์ เชื่อมั่นในสถาปัตยกรรมเชิงธรรมชาติ (Organic Architecture) ที่ผสานอาคารเข้ากับธรรมชาติอย่างกลมกลืน และให้ความสำคัญกับการนำลวดลายแบบใดมาใช้ในการออกแบบ?", options: ["ก. Geometry (เรขาคณิต)", "ข. Abstract (นามธรรม)", "ค. Baroque (บาโรก)", "ง. Gothic (โกธิค)"], ans: 0, exp: "แฟรงค์ ลอยด์ ไรต์ มีความเชื่อมั่นในสถาปัตยกรรมเชิงธรรมชาติ และมีการนำเอาลวดลายแบบ Geometry มาใช้ในการออกแบบ" },
+            { cat: "ปรัชญาของสถาปนิก", q: "ฌอง นูเวล ได้รับฉายาว่าเป็น “กิ้งก่าเปลี่ยนสี” ของวงการสถาปัตยกรรม เพราะเขาเชื่อในเรื่องใด?", options: ["ก. สถาปัตยกรรมควรมีสไตล์ที่ตายตัว", "ข. แต่ละโครงการเป็นการตอบสนองต่อบริบทของสถานที่นั้นๆ โดยเฉพาะ", "ค. ทุกอาคารควรมีรูปทรงเหมือนกระสุนปืน", "ง. อาคารทั้งหมดต้องใช้วัสดุโปร่งแสง"], ans: 1, exp: "ฌอง นูเวล เชื่อว่าสถาปัตยกรรมไม่ควรมีสไตล์ที่ตายตัว แต่ละโครงการของเขาจึงเป็นการตอบสนองต่อบริบทโดยเฉพาะ" },
+            { cat: "ปรัชญาของสถาปนิก", q: "คิโช คุโรกาวะ เป็นสถาปนิกผู้สนับสนุนหลักการใด ซึ่งนำเสนอเกี่ยวกับเมืองและสถาปัตยกรรมที่เติบโตอย่างเป็นธรรมชาติควบคู่ไปกับการเปลี่ยนแปลงของสังคมและประชากร?", options: ["ก. เมแทบอลิซึม (Metabolism)", "ข. ดีคอนสตรักชัน (Deconstructivism)", "ค. โพสต์โมเดิร์นนิซึม (Postmodernism)", "ง. บรูทัลลิซึม (Brutalism)"], ans: 0, exp: "คิโช คุโรกาวะ เป็นสถาปนิกผู้สนับสนุนหลักการ 'เมแทบอลิซึม'" },
+            { cat: "ปรัชญาของสถาปนิก", q: "ปรัชญาการออกแบบของ บิยาร์ค อิงเกลส์ (Bjarke Ingels) ที่เน้นการออกแบบที่ยั่งยืนและใช้งานได้จริง ถูกเรียกว่าอะไร?", options: ["ก. Extreme Deconstruction", "ข. Rational Functionalism", "ค. Pragmatic Utopianism", "ง. Minimal Realism"], ans: 2, exp: "บิยาร์ค อิงเกลส์ อธิบายแนวคิดของเขาว่าเป็น 'Pragmatic Utopianism'" },
+
+            // หมวดที่ 4: ประวัติศาสตร์
+            { cat: "ประวัติศาสตร์", q: "เลอ กอร์บูซีเย (Le Corbusier) ได้รับแรงบันดาลใจจากโบราณสถานแห่งใดในการเชื่อในความสำคัญของสัดส่วนและความงามทางคณิตศาสตร์?", options: ["ก. โคลอสเซียม ในโรม", "ข. วิหารพาร์เธนอน ในกรีซ", "ค. พีระมิด ในอียิปต์", "ง. มาชู ปิกชู ในเปรู"], ans: 1, exp: "เลอ กอร์บูซีเย ได้รับแรงบันดาลใจจากวิหารพาร์เธนอน ในกรีซ ซึ่งทำให้เขาเชื่อในสัดส่วนและความงามทางคณิตศาสตร์" },
+            { cat: "ประวัติศาสตร์", q: "แนวคิด “Five Points of Architecture” ของ เลอ กอร์บูซีเย มีองค์ประกอบสำคัญ 5 อย่าง ข้อใดต่อไปนี้ ไม่ใช่ หนึ่งในแนวคิดทั้งห้า?", options: ["ก. เสาค้ำ (Pilotis)", "ข. หลังคาราบ (Flat Roof)", "ค. ผนังภายนอกที่อิสระ (Free Facade)", "ง. ผนังรับน้ำหนัก (Bearing Walls)"], ans: 3, exp: "แนวคิด Five Points เน้นใช้เสาค้ำและผนังอิสระ ดังนั้นผนังรับน้ำหนักจึงไม่ใช่หลักการของเขา" },
+            { cat: "ประวัติศาสตร์", q: "โบสถ์ Notre Dame du Haut ที่รงชอง ซึ่งถูกมองว่าเป็นงานชิ้นโบว์แดงของ เลอ กอร์บูซีเย ถูกสร้างขึ้นด้วยโครงสร้างส่วนใหญ่จากวัสดุใด?", options: ["ก. อิฐดินเผา", "ข. เหล็กกล้า", "ค. ไม้", "ง. คอนกรีต"], ans: 3, exp: "โบสถ์ที่รงชองมีโครงสร้างส่วนใหญ่ทำมาจากคอนกรีต หรือที่เขาเรียกว่า brutism (คอนกรีตเปลือย)" },
+            { cat: "ประวัติศาสตร์", q: "สถาปัตยกรรมของ เปาโล เมนเดส ดา โรชา ที่ได้รับรางวัล Pritzker ปี 2006 มีการผสานความงามอันทรงพลังของสถาปัตยกรรมรูปแบบใดเข้ากับความเข้าใจในสังคม?", options: ["ก. อาร์ตเดโค (Art Deco)", "ข. โพสต์โมเดิร์นนิซึม (Postmodernism)", "ค. ปูนเปลือย (Brutalism)", "ง. นีโอคลาสสิก (Neoclassicism)"], ans: 2, exp: "เปาโล เมนเดส ดา โรชา ผสานความงามของ Brutalism เข้ากับความเข้าใจในสังคม" },
+            { cat: "ประวัติศาสตร์", q: "Frank Owen Gehry ได้รับรางวัล Pritzker ในปีใด?", options: ["ก. ค.ศ. 1989", "ข. ค.ศ. 1997", "ค. ค.ศ. 2004", "ง. ค.ศ. 2010"], ans: 0, exp: "แฟรงก์ โอเวน เกห์รี ได้รับรางวัลพริตซ์เกอร์ในปี 1989" },
+            { cat: "ประวัติศาสตร์", q: "พิพิธภัณฑ์กุกเกนไฮม์ บิลบาโอ (Guggenheim Museum Bilbao) ผลงานเด่นของแฟรงก์ เกห์รี สร้างขึ้นโดยใช้วัสดุใดเป็นวัสดุหลัก?", options: ["ก. คอนกรีตเปลือย", "ข. แก้วฝ้า", "ค. ไทเทเนียม", "ง. ท่อกระดาษแข็ง"], ans: 2, exp: "พิพิธภัณฑ์กุกเกนไฮม์ บิลบาโอ มีไทเทเนียมเป็นวัสดุหลัก" },
+            { cat: "ประวัติศาสตร์", q: "เคนโซ ทันเกะ สถาปนิกชาวญี่ปุ่นผู้ซึ่งได้รับการขนานนามว่า “ทันเกะ สถาปนิกของโลก” ได้รับการยอมรับจากผลงานที่หลอมรวมสไตล์สถาปัตยกรรมแบบใดเข้ากับสถาปัตยกรรมร่วมสมัยของยุเกาหลี?", options: ["ก. สถาปัตยกรรมอิสลามดั้งเดิม", "ข. สถาปัตยกรรมบาโรก", "ค. สถาปัตยกรรมดั้งเดิมของญี่ปุ่น", "ง. สถาปัตยกรรมยุคกลาง"], ans: 2, exp: "เคนโซ ทันเกะ หลอมรวมสไตล์ดั้งเดิมของญี่ปุ่นเข้ากับสถาปัตยกรรมร่วมสมัย" },
+            { cat: "ประวัติศาสตร์", q: "เคนโซ ทันเกะ ออกแบบสนามกีฬาแห่งชาติโยโยงิ เพื่อใช้ในงานสำคัญระดับโลกใด?", options: ["ก. นิทรรศการ Expo 67", "ข. โอลิมปิกที่ลอนดอน 2012", "ค. โอลิมปิกที่โตเกียว 1964", "ง. โอลิมปิกที่ปักกิ่ง 2008"], ans: 2, exp: "สนามกีฬาแห่งชาติโยโยงิสร้างขึ้นสำหรับโตเกียวโอลิมปิก 1964" },
+            { cat: "ประวัติศาสตร์", q: "Dancing House ในกรุงปราก ถูกออกแบบโดย แฟรงก์ เกห์รี และ วลาโด มิลูนิก โดยใช้ลัทธิคตินิยมใดเป็นสื่อกลางในการสื่อสารการเปลี่ยนผ่านจากระบอบคอมมิวนิสต์สู่ระบอบประชาธิปไตย?", options: ["ก. มินิมอลลิซึม", "ข. ดีคอนสตรักชัน (Deconstructivism)", "ค. ไฮเทค", "ง. สถาปัตยกรรมเชิงธรรมชาติ"], ans: 1, exp: "Dancing House เป็นงานชิ้นเอกของลัทธิ Deconstructivism" },
+            { cat: "ประวัติศาสตร์", q: "สถาปนิกชาวอังกฤษท่านใดที่ได้รับการยกย่องว่า เป็นผู้บุกเบิกด้านการใช้เทคโนโลยีในการออกแบบอาคาร และมีความเชี่ยวชาญในการผสมผสานเทคโนโลยีกับการออกแบบเพื่อความยั่งยืน?", options: ["ก. ทาดาโอะ อันโดะ", "ข. นอร์แมน ฟอสเตอร์", "ค. หลุยส์ คาห์น", "ง. แฟรงค์ ลอยด์ ไรต์"], ans: 1, exp: "นอร์แมน ฟอสเตอร์ เป็นผู้บุกเบิกเทคโนโลยีเพื่อสิ่งแวดล้อมและความยั่งยืน" }
+        ];
+
+        quizData.push(...remainingData);
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let categoryScores = {
+            "สถาปนิก กับ ผลงาน": 0,
+            "รางวัล Pritzker": 0,
+            "ปรัชญาของสถาปนิก": 0,
+            "ประวัติศาสตร์": 0
+        };
+
+        // --- Charts Implementation ---
+        
+        function initCategoryChart() {
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'polarArea',
+                data: {
+                    labels: Object.keys(categoryScores),
+                    datasets: [{
+                        data: [10, 10, 10, 10],
+                        backgroundColor: [
+                            'rgba(99, 102, 241, 0.5)',
+                            'rgba(168, 85, 247, 0.5)',
+                            'rgba(16, 185, 129, 0.5)',
+                            'rgba(245, 158, 11, 0.5)'
+                        ]
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { display: false } } }
+            });
+        }
+
+        function startQuiz() {
+            document.getElementById('welcome-screen').style.display = 'none';
+            document.getElementById('quiz-screen').style.display = 'block';
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const q = quizData[currentQuestionIndex];
+            document.getElementById('current-category').innerText = q.cat;
+            document.getElementById('question-number').innerText = `${String(currentQuestionIndex + 1).padStart(2, '0')}/40`;
+            document.getElementById('question-text').innerText = q.q;
+            document.getElementById('progress-bar').style.width = `${((currentQuestionIndex + 1) / 40) * 100}%`;
+
+            const optionsGrid = document.getElementById('options-grid');
+            optionsGrid.innerHTML = '';
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('div');
+                btn.className = "option-card p-5 bg-white/60 rounded-xl text-lg font-medium shadow-sm border border-slate-100";
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(index, btn);
+                optionsGrid.appendChild(btn);
+            });
+
+            document.getElementById('explanation-box').classList.add('hidden');
+        }
+
+        function checkAnswer(selectedIndex, btnElement) {
+            const q = quizData[currentQuestionIndex];
+            const allOptions = document.querySelectorAll('.option-card');
+            
+            // Disable further clicks
+            allOptions.forEach(opt => opt.onclick = null);
+
+            if (selectedIndex === q.ans) {
+                btnElement.classList.add('correct');
+                score++;
+                categoryScores[q.cat]++;
+            } else {
+                btnElement.classList.add('wrong');
+                allOptions[q.ans].classList.add('correct');
+            }
+
+            document.getElementById('explanation-text').innerText = q.exp;
+            document.getElementById('explanation-box').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < quizData.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+
+            document.getElementById('total-correct').innerText = score;
+            document.getElementById('total-wrong').innerText = 40 - score;
+            document.getElementById('total-percent').innerText = `${Math.round((score / 40) * 100)}%`;
+
+            initResultChart();
+            renderBreakdown();
+        }
+
+        function renderBreakdown() {
+            const container = document.getElementById('category-breakdown');
+            container.innerHTML = '';
+            for (const [cat, s] of Object.entries(categoryScores)) {
+                const percent = (s / 10) * 100;
+                container.innerHTML += `
+                    <div>
+                        <div class="flex justify-between mb-1 text-sm font-bold">
+                            <span>${cat}</span>
+                            <span>${percent}%</span>
+                        </div>
+                        <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                            <div class="h-full bg-indigo-500" style="width: ${percent}%"></div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function initResultChart() {
+            const ctx = document.getElementById('resultCategoryChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: Object.keys(categoryScores),
+                    datasets: [{
+                        label: 'คะแนนที่ได้',
+                        data: Object.values(categoryScores),
+                        backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                        borderColor: 'rgba(99, 102, 241, 1)',
+                        pointBackgroundColor: 'rgba(99, 102, 241, 1)'
+                    }]
+                },
+                options: {
+                    scales: { r: { beginAtZero: true, max: 10 } }
+                }
+            });
+        }
+
+        window.onload = initCategoryChart;
+    </script>
+</body>
+</html>
